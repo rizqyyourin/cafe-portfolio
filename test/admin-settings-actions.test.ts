@@ -17,16 +17,16 @@ function validForm() {
   form.set("cafeName", "Kōhi Coffee");
   form.set("tagline", "Coffee worth slowing down for.");
   form.set("description", "A modern neighbourhood specialty coffee shop in Kemang, Jakarta.");
-  form.set("logoUrl", "");
   form.set("address", "Jl. Kemang Raya No. 28, Jakarta Selatan 12730");
   form.set("phone", "+62 21 5550 0188");
   form.set("whatsapp", "628111111111");
   form.set("email", "hello@kohicoffee.example");
   form.set("instagram", "https://instagram.com/kohicoffee");
+  form.set("threads", "");
+  form.set("twitter", "");
   form.set("tiktok", "");
   form.set("facebook", "");
   form.set("mapsUrl", "https://maps.google.com/?q=Kemang+Jakarta");
-  form.set("mapsEmbedUrl", "");
   for (const day of ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]) form.set(`openingHours.${day}`, "08:00 - 22:00");
   return form;
 }

@@ -111,6 +111,7 @@ describe("testimonials module", () => {
     await user.click(screen.getByRole("button", { name: "Edit Nadia Ramadhani" }));
     const dialog = screen.getByRole("dialog", { name: "Edit testimonial" });
     expect(within(dialog).getByLabelText("Customer name")).toHaveValue("Nadia Ramadhani");
+    expect(within(dialog).getByLabelText("Published")).toBeChecked();
     await user.click(within(dialog).getByLabelText("Published"));
     await user.click(within(dialog).getByRole("button", { name: "Save testimonial" }));
 

@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => navigationMocks,
 }));
 
-import { DashboardView, type CreateMenuItemAction, type DashboardData, type UpdateReservationStatusAction } from "@/components/admin/dashboard-view";
+import { DashboardView, type DashboardData, type UpdateReservationStatusAction } from "@/components/admin/dashboard-view";
 
 const dashboardData: DashboardData = {
   greetingName: "Sasha",
@@ -52,19 +52,15 @@ const dashboardData: DashboardData = {
 };
 
 function renderDashboard(overrides: Partial<DashboardData> = {}, actions?: {
-  createMenuItemAction?: CreateMenuItemAction;
   updateReservationStatusAction?: UpdateReservationStatusAction;
 }) {
-  const createMenuItemAction = actions?.createMenuItemAction ?? vi.fn().mockResolvedValue({ success: true, message: "Menu item created." });
   const updateReservationStatusAction = actions?.updateReservationStatusAction ?? vi.fn().mockResolvedValue({ success: true, message: "Reservation updated." });
 
   return {
-    createMenuItemAction,
     updateReservationStatusAction,
     ...render(
       <DashboardView
         data={{ ...dashboardData, ...overrides }}
-        createMenuItemAction={createMenuItemAction}
         updateReservationStatusAction={updateReservationStatusAction}
       />,
     ),
@@ -95,113 +91,11 @@ describe("dashboard module", () => {
     expect(screen.getByRole("button", { name: "Review reservations" })).toBeInTheDocument();
   });
 
-  it("opens the add menu modal and blocks an empty required submission", async () => {
-    const user = userEvent.setup();
-    const { createMenuItemAction } = renderDashboard();
-
-    await user.click(screen.getByRole("button", { name: /add menu item/i }));
-    const dialog = screen.getByRole("dialog", { name: "Add menu item" });
-    expect(dialog).toBeInTheDocument();
-    expect(within(dialog).getByLabelText("Name")).toBeRequired();
-
-    await user.click(within(dialog).getByRole("button", { name: "Create menu item" }));
-
-    expect(createMenuItemAction).not.toHaveBeenCalled();
-    expect(screen.getByRole("dialog", { name: "Add menu item" })).toBeInTheDocument();
-  });
-
-  it("explains why menu creation is unavailable when no active category exists", async () => {
-    const user = userEvent.setup();
-    const { createMenuItemAction } = renderDashboard({ categories: [] });
-
-    await user.click(screen.getByRole("button", { name: /add menu item/i }));
-    const dialog = screen.getByRole("dialog", { name: "Add menu item" });
-    expect(within(dialog).getByRole("status")).toHaveTextContent("Add a category before creating a menu item.");
-    expect(within(dialog).getByRole("button", { name: "Create menu item" })).toBeDisabled();
-    expect(createMenuItemAction).not.toHaveBeenCalled();
-  });
-
-  it("closes the add menu modal with its close control, overlay, and Escape", async () => {
-    const user = userEvent.setup();
+  it("does not expose menu creation from the overview", () => {
     renderDashboard();
 
-    await user.click(screen.getByRole("button", { name: /add menu item/i }));
-    await user.click(screen.getByRole("button", { name: "Close add menu item dialog" }));
+    expect(screen.queryByRole("button", { name: /add menu item/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog", { name: "Add menu item" })).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: /add menu item/i }));
-    await user.click(screen.getByRole("button", { name: "Dismiss add menu item dialog" }));
-    expect(screen.queryByRole("dialog", { name: "Add menu item" })).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: /add menu item/i }));
-    await user.keyboard("{Escape}");
-    expect(screen.queryByRole("dialog", { name: "Add menu item" })).not.toBeInTheDocument();
-  });
-
-  it("shows server validation feedback and stays open after a rejected menu create", async () => {
-    const user = userEvent.setup();
-    const createMenuItemAction = vi.fn().mockResolvedValue({
-      success: false,
-      message: "A menu item with that slug already exists.",
-      errors: { slug: ["Use a different slug."] },
-    });
-    const { createMenuItemAction: action } = renderDashboard({}, { createMenuItemAction });
-
-    await user.click(screen.getByRole("button", { name: /add menu item/i }));
-    const dialog = screen.getByRole("dialog", { name: "Add menu item" });
-    await user.type(within(dialog).getByLabelText("Name"), "New Latte");
-    await user.type(within(dialog).getByLabelText("Slug"), "new-latte");
-    await user.type(within(dialog).getByLabelText("Description"), "A smooth new latte for the menu.");
-    await user.type(within(dialog).getByLabelText("Price (IDR)"), "38000");
-    await user.selectOptions(within(dialog).getByLabelText("Category"), "coffee");
-    await user.click(within(dialog).getByRole("button", { name: "Create menu item" }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent("A menu item with that slug already exists.");
-    expect(screen.getByText("Use a different slug.")).toBeInTheDocument();
-    expect(action).toHaveBeenCalledOnce();
-    expect(screen.getByRole("dialog", { name: "Add menu item" })).toBeInTheDocument();
-  });
-
-  it("surfaces unexpected menu create failures and clears the pending state", async () => {
-    const user = userEvent.setup();
-    const createMenuItemAction = vi.fn().mockRejectedValue(new Error("database unavailable"));
-    renderDashboard({}, { createMenuItemAction });
-
-    await user.click(screen.getByRole("button", { name: /add menu item/i }));
-    const dialog = screen.getByRole("dialog", { name: "Add menu item" });
-    await user.type(within(dialog).getByLabelText("Name"), "New Latte");
-    await user.type(within(dialog).getByLabelText("Slug"), "new-latte");
-    await user.type(within(dialog).getByLabelText("Description"), "A smooth new latte for the menu.");
-    await user.type(within(dialog).getByLabelText("Price (IDR)"), "38000");
-    await user.selectOptions(within(dialog).getByLabelText("Category"), "coffee");
-    await user.click(within(dialog).getByRole("button", { name: "Create menu item" }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong while saving the menu item.");
-    expect(within(screen.getByRole("dialog", { name: "Add menu item" })).getByRole("button", { name: "Create menu item" })).not.toBeDisabled();
-  });
-
-  it("prevents duplicate menu creates while the request is pending and refreshes after success", async () => {
-    const user = userEvent.setup();
-    let resolveAction!: (value: { success: boolean; message: string }) => void;
-    const createMenuItemAction = vi.fn().mockReturnValue(new Promise((resolve) => { resolveAction = resolve; }));
-    renderDashboard({}, { createMenuItemAction });
-
-    await user.click(screen.getByRole("button", { name: /add menu item/i }));
-    const dialog = screen.getByRole("dialog", { name: "Add menu item" });
-    await user.type(within(dialog).getByLabelText("Name"), "New Latte");
-    await user.type(within(dialog).getByLabelText("Slug"), "new-latte");
-    await user.type(within(dialog).getByLabelText("Description"), "A smooth new latte for the menu.");
-    await user.type(within(dialog).getByLabelText("Price (IDR)"), "38000");
-    await user.selectOptions(within(dialog).getByLabelText("Category"), "coffee");
-    const submit = within(dialog).getByRole("button", { name: "Create menu item" });
-    await user.click(submit);
-    expect(submit).toBeDisabled();
-    await user.click(submit);
-    expect(createMenuItemAction).toHaveBeenCalledOnce();
-
-    resolveAction({ success: true, message: "Menu item created." });
-    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Add menu item" })).not.toBeInTheDocument());
-    expect(navigationMocks.refresh).toHaveBeenCalledOnce();
   });
 
   it("opens an empty review state when there are no pending reservations", async () => {

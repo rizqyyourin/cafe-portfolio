@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, like, lte, or, type SQL } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import type { ReservationInput } from "@/lib/validations/reservation";
@@ -21,12 +21,39 @@ export type AdminReservation = {
   status: ReservationStatus;
 };
 
+export const RESERVATION_PAGE_SIZE = 10;
+export type ReservationDateFilter = "all" | "today" | "week" | "month" | "year";
+export type ReservationListStatus = "all" | ReservationStatus;
+export type ReservationListRequest = {
+  offset: number;
+  status: ReservationListStatus;
+  dateFilter: ReservationDateFilter;
+  year: string;
+  query: string;
+};
+export type ReservationPageResult = {
+  reservations: AdminReservation[];
+  hasMore: boolean;
+  nextOffset: number | null;
+};
+
 export type ReservationPageData = {
   today: string;
   weekStart: string;
   weekEnd: string;
   pendingCount: number;
   reservations: AdminReservation[];
+  hasMore: boolean;
+  nextOffset: number | null;
+};
+
+export type ReservationPageOptions = {
+  limit?: number;
+  offset?: number;
+  status?: ReservationStatus;
+  dateFilter?: ReservationDateFilter;
+  year?: string;
+  query?: string;
 };
 
 const reservationColumns = {
@@ -71,17 +98,54 @@ export function getReservationDateWindow(referenceDate = new Date()) {
   };
 }
 
-export async function getReservationPageData(database: ReservationDatabase = db): Promise<ReservationPageData> {
+export async function getReservationPageData(
+  database: ReservationDatabase = db,
+  options: ReservationPageOptions = {},
+): Promise<ReservationPageData> {
   const dateWindow = getReservationDateWindow();
-  const reservations = await database
-    .select(reservationColumns)
-    .from(reservation)
-    .orderBy(asc(reservation.reservationDate), asc(reservation.reservationTime), desc(reservation.createdAt));
+  const limit = Math.min(Math.max(options.limit ?? RESERVATION_PAGE_SIZE, 1), 50);
+  const offset = Math.max(options.offset ?? 0, 0);
+  const conditions: SQL[] = [];
+
+  if (options.status) conditions.push(eq(reservation.status, options.status));
+  if (options.dateFilter === "today") conditions.push(eq(reservation.reservationDate, dateWindow.today));
+  if (options.dateFilter === "week") {
+    conditions.push(gte(reservation.reservationDate, dateWindow.weekStart));
+    conditions.push(lte(reservation.reservationDate, dateWindow.weekEnd));
+  }
+  if (options.dateFilter === "month") conditions.push(like(reservation.reservationDate, `${dateWindow.today.slice(0, 7)}-%`));
+  if (options.dateFilter === "year") conditions.push(like(reservation.reservationDate, `${options.year ?? dateWindow.today.slice(0, 4)}-%`));
+  const query = options.query?.trim();
+  if (query) {
+    const searchPattern = `%${query}%`;
+    conditions.push(or(
+      like(reservation.name, searchPattern),
+      like(reservation.phone, searchPattern),
+      like(reservation.email, searchPattern),
+      like(reservation.specialRequest, searchPattern),
+    )!);
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  const [pendingRows, pageRows] = await Promise.all([
+    database.select({ value: count() }).from(reservation).where(eq(reservation.status, "PENDING")),
+    database
+      .select(reservationColumns)
+      .from(reservation)
+      .where(whereClause)
+      .orderBy(asc(reservation.reservationDate), asc(reservation.reservationTime), desc(reservation.createdAt), asc(reservation.id))
+      .limit(limit + 1)
+      .offset(offset),
+  ]);
+  const hasMore = pageRows.length > limit;
+  const reservations = pageRows.slice(0, limit);
 
   return {
     ...dateWindow,
-    pendingCount: reservations.filter((item) => item.status === "PENDING").length,
+    pendingCount: pendingRows[0]?.value ?? 0,
     reservations,
+    hasMore,
+    nextOffset: hasMore ? offset + limit : null,
   };
 }
 
@@ -108,8 +172,8 @@ export async function insertReservation(
 
 const allowedTransitions: Record<ReservationStatus, readonly ReservationStatus[]> = {
   PENDING: ["CONFIRMED", "CANCELLED"],
-  CONFIRMED: ["COMPLETED"],
-  CANCELLED: [],
+  CONFIRMED: ["COMPLETED", "CANCELLED"],
+  CANCELLED: ["PENDING"],
   COMPLETED: [],
 };
 

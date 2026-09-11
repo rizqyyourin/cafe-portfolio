@@ -6,16 +6,16 @@ const validSettings = {
   cafeName: "Kōhi Coffee",
   tagline: "Coffee worth slowing down for.",
   description: "A modern neighbourhood specialty coffee shop in Kemang, Jakarta.",
-  logoUrl: "",
   address: "Jl. Kemang Raya No. 28, Jakarta Selatan 12730",
   phone: "+62 21 5550 0188",
   whatsapp: "628111111111",
   email: "hello@kohicoffee.example",
   instagram: "https://instagram.com/kohicoffee",
+  threads: "",
+  twitter: "",
   tiktok: "",
   facebook: "",
   mapsUrl: "https://maps.google.com/?q=Kemang+Jakarta",
-  mapsEmbedUrl: "",
   openingHours: Object.fromEntries(weekdayNames.map((day) => [day, "08:00 - 22:00"])),
 };
 

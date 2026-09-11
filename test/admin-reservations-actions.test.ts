@@ -1,16 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  getReservationPageData: vi.fn(),
   requireAdminSession: vi.fn(),
   updateReservationStatus: vi.fn(),
   revalidatePath: vi.fn(),
 }));
 
 vi.mock("@/lib/auth-guard", () => ({ requireAdminSession: mocks.requireAdminSession }));
-vi.mock("@/db/reservations", () => ({ updateReservationStatus: mocks.updateReservationStatus }));
+vi.mock("@/db/reservations", () => ({ getReservationPageData: mocks.getReservationPageData, RESERVATION_PAGE_SIZE: 10, updateReservationStatus: mocks.updateReservationStatus }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 
-import { updateAdminReservationStatus } from "@/actions/admin-reservations";
+import { getAdminReservationsPage, updateAdminReservationStatus } from "@/actions/admin-reservations";
 
 function formData(overrides: Record<string, string> = {}) {
   const form = new FormData();
@@ -22,9 +23,26 @@ function formData(overrides: Record<string, string> = {}) {
 
 describe("reservation admin actions", () => {
   beforeEach(() => {
+    mocks.getReservationPageData.mockReset().mockResolvedValue({ reservations: [], hasMore: false, nextOffset: null });
     mocks.requireAdminSession.mockReset().mockResolvedValue({ user: { id: "admin-1" } });
     mocks.updateReservationStatus.mockReset().mockResolvedValue(undefined);
     mocks.revalidatePath.mockReset();
+  });
+
+  it("requires admin access and loads a filtered reservation page", async () => {
+    const request = { offset: 10, status: "CONFIRMED" as const, dateFilter: "month" as const, year: "2026", query: "nadia" };
+
+    await getAdminReservationsPage(request);
+
+    expect(mocks.requireAdminSession).toHaveBeenCalledOnce();
+    expect(mocks.getReservationPageData).toHaveBeenCalledWith(undefined, {
+      dateFilter: "month",
+      limit: 10,
+      offset: 10,
+      query: "nadia",
+      status: "CONFIRMED",
+      year: "2026",
+    });
   });
 
   it("requires admin access, persists valid status, and revalidates both views", async () => {
@@ -40,7 +58,7 @@ describe("reservation admin actions", () => {
   it("rejects missing or unsupported status without writing", async () => {
     const missingId = new FormData();
     missingId.set("status", "CONFIRMED");
-    const invalidStatus = formData({ status: "PENDING" });
+    const invalidStatus = formData({ status: "ARCHIVED" });
 
     const missingResult = await updateAdminReservationStatus(missingId);
     const invalidResult = await updateAdminReservationStatus(invalidStatus);
@@ -49,6 +67,13 @@ describe("reservation admin actions", () => {
     expect(invalidResult.errors?.status).toBeDefined();
     expect(mocks.updateReservationStatus).not.toHaveBeenCalled();
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("restores a cancelled reservation to pending", async () => {
+    const result = await updateAdminReservationStatus(formData({ status: "PENDING" }));
+
+    expect(mocks.updateReservationStatus).toHaveBeenCalledWith("reservation-1", "PENDING");
+    expect(result).toEqual({ success: true, message: "Reservation restored." });
   });
 
   it("does not write when auth fails", async () => {

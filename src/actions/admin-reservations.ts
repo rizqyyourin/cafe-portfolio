@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { updateReservationStatus } from "@/db/reservations";
+import { getReservationPageData, RESERVATION_PAGE_SIZE, updateReservationStatus, type ReservationListRequest, type ReservationPageResult } from "@/db/reservations";
 import { requireAdminSession } from "@/lib/auth-guard";
 
 export type AdminReservationActionState = {
@@ -19,8 +19,38 @@ function stringValue(formData: FormData, key: string) {
 
 const reservationStatusSchema = z.object({
   reservationId: z.string().trim().min(1, "Reservation is required."),
-  status: z.enum(["CONFIRMED", "CANCELLED", "COMPLETED"]),
+  status: z.enum(["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"]),
 });
+
+const reservationPageRequestSchema = z.object({
+  offset: z.number().int().min(0).max(100_000),
+  status: z.enum(["all", "PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"]),
+  dateFilter: z.enum(["all", "today", "week", "month", "year"]),
+  year: z.string().regex(/^\d{4}$/),
+  query: z.string().trim().max(80),
+});
+
+export async function getAdminReservationsPage(request: ReservationListRequest): Promise<ReservationPageResult> {
+  await requireAdminSession();
+
+  const parsed = reservationPageRequestSchema.safeParse(request);
+  if (!parsed.success) throw new Error("Invalid reservation page request.");
+
+  const page = await getReservationPageData(undefined, {
+    dateFilter: parsed.data.dateFilter === "all" ? undefined : parsed.data.dateFilter,
+    limit: RESERVATION_PAGE_SIZE,
+    offset: parsed.data.offset,
+    query: parsed.data.query,
+    status: parsed.data.status === "all" ? undefined : parsed.data.status,
+    year: parsed.data.year,
+  });
+
+  return {
+    reservations: page.reservations,
+    hasMore: page.hasMore,
+    nextOffset: page.nextOffset,
+  };
+}
 
 export async function updateAdminReservationStatus(formData: FormData): Promise<AdminReservationActionState> {
   await requireAdminSession();
@@ -48,7 +78,9 @@ export async function updateAdminReservationStatus(formData: FormData): Promise<
     ? "Reservation confirmed."
     : parsed.data.status === "CANCELLED"
       ? "Reservation cancelled."
-      : "Reservation marked completed.";
+      : parsed.data.status === "PENDING"
+        ? "Reservation restored."
+        : "Reservation marked completed.";
 
   return { success: true, message };
 }

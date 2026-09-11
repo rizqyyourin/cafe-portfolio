@@ -101,6 +101,25 @@ describe("updateReservationStatus", () => {
     expect((await testDb.select({ status: reservation.status }).from(reservation).where(eq(reservation.id, id)))[0]?.status).toBe("COMPLETED");
   });
 
+  it("allows the confirmed edit branch to cancel and restore a reservation to pending", async () => {
+    const id = await insertReservation({
+      name: "Restore Guest",
+      phone: "081234567890",
+      reservationDate: "2099-08-18",
+      reservationTime: "12:00",
+      guestCount: 2,
+      specialRequest: "",
+    }, testDb);
+
+    await updateReservationStatus(id, "CONFIRMED", testDb);
+    await updateReservationStatus(id, "CANCELLED", testDb);
+    expect((await testDb.select({ status: reservation.status }).from(reservation).where(eq(reservation.id, id)))[0]?.status).toBe("CANCELLED");
+    await updateReservationStatus(id, "PENDING", testDb);
+    expect((await testDb.select({ status: reservation.status }).from(reservation).where(eq(reservation.id, id)))[0]?.status).toBe("PENDING");
+    await updateReservationStatus(id, "CONFIRMED", testDb);
+    await updateReservationStatus(id, "COMPLETED", testDb);
+  });
+
   it("rejects skipped or repeated transitions", async () => {
     const id = await insertReservation({
       name: "Transition Guest",
@@ -122,6 +141,18 @@ describe("updateReservationStatus", () => {
 });
 
 describe("getReservationPageData", () => {
+  it("paginates reservations with a stable offset and preserves status filters", async () => {
+    const firstPage = await getReservationPageData(testDb, { limit: 2, offset: 0 });
+    const secondPage = await getReservationPageData(testDb, { limit: 2, offset: 2 });
+    const pendingPage = await getReservationPageData(testDb, { limit: 1, offset: 0, status: "PENDING" });
+
+    expect(firstPage.reservations).toHaveLength(2);
+    expect(firstPage.hasMore).toBe(true);
+    expect(firstPage.nextOffset).toBe(2);
+    expect(secondPage.reservations[0]?.id).not.toBe(firstPage.reservations[0]?.id);
+    expect(pendingPage.reservations.every((item) => item.status === "PENDING")).toBe(true);
+  });
+
   it("returns all requests, the pending count, and a stable Jakarta week window", async () => {
     const result = await getReservationPageData(testDb);
 

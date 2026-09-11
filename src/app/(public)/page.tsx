@@ -4,6 +4,8 @@ import Link from "next/link";
 import { getPublicFeaturedMenuItems } from "@/db/menu";
 import { getPublicCafeSettings } from "@/db/settings";
 import { getPublicTestimonials } from "@/db/testimonials";
+import { TestimonialCarousel } from "@/components/public/testimonial-carousel";
+import { OpeningHoursModal } from "@/components/public/opening-hours-modal";
 import styles from "./home.module.css";
 import { formatRupiah, getPublicMenuImageUrl } from "@/lib/site";
 
@@ -32,7 +34,6 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [settings, featuredMenuItems, testimonials] = await Promise.all([getPublicCafeSettings(), getPublicFeaturedMenuItems(), getPublicTestimonials()]);
-  const featuredTestimonial = testimonials[0];
   const dailyHours = Object.values(settings.openingHours).filter(Boolean);
   const hoursText = dailyHours.length > 0 && new Set(dailyHours).size === 1 ? dailyHours[0] : "See our weekly hours";
 
@@ -43,7 +44,6 @@ export default async function HomePage() {
           <h1>{settings.tagline}</h1>
           <p className={styles.lede}>{settings.description}</p>
           <HeroActions className={styles.desktopHeroActions} />
-          <p className={styles.heroMeta}>Est. 2021 <span>/</span> Kemang, Jakarta</p>
         </div>
 
         <div className={styles.heroVisual} data-hero-image>
@@ -106,14 +106,14 @@ export default async function HomePage() {
       </section>
 
       <section className={styles.testimonial}>
-        <div className={styles.sectionShell} data-stagger>
+        <div className={styles.sectionShell}>
           <p className={styles.sectionNumber}>Words from our regulars</p>
-          {featuredTestimonial ? <><blockquote>“{featuredTestimonial.content}”</blockquote><p className={styles.quoteAuthor}>— {featuredTestimonial.customerName}</p></> : <p className={styles.quoteAuthor}>More guest notes coming soon.</p>}
+          <TestimonialCarousel testimonials={testimonials} />
         </div>
       </section>
 
       <section className={`${styles.finalCta} ${styles.sectionShell}`} data-stagger>
-        <div><h2>Your table is waiting.</h2><p>{settings.address} <span>·</span> {hoursText}</p></div>
+        <div><h2>Your table is waiting.</h2><p>{settings.address} <span>·</span> {hoursText === "See our weekly hours" ? <OpeningHoursModal hours={settings.openingHours} /> : <OpeningHoursModal hours={settings.openingHours} triggerLabel={hoursText} />}</p></div>
         <div className={styles.finalActions}><Link className={styles.goldButton} href="/reservation">Reserve your table <Arrow /></Link><Link className={styles.outlineButton} href="/contact">Get directions <Arrow /></Link></div>
       </section>
     </>

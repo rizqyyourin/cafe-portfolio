@@ -1,4 +1,4 @@
-import { createMenuItem, updateAdminReservationStatus } from "@/actions/admin-dashboard";
+import { updateAdminReservationStatus } from "@/actions/admin-dashboard";
 import { DashboardView } from "@/components/admin/dashboard-view";
 import { getDashboardData } from "@/db/dashboard";
 import { requireAdminSession } from "@/lib/auth-guard";
@@ -37,5 +37,5 @@ export default async function AdminDashboardPage() {
     categories: dashboard.categories,
     reservations: dashboard.reservations,
     pendingReservations: dashboard.pendingReservations,
-  }} createMenuItemAction={createMenuItem} updateReservationStatusAction={updateAdminReservationStatus} />;
+  }} updateReservationStatusAction={updateAdminReservationStatus} />;
 }

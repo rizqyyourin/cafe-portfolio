@@ -15,6 +15,13 @@
       "when": 1789043794000,
       "tag": "0001_seed_dev_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789050000000,
+      "tag": "0002_add_social_links",
+      "breakpoints": true
     }
   ]
 }

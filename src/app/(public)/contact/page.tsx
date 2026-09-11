@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 
 import { getPublicCafeSettings } from "@/db/settings";
+import { OpeningHoursModal } from "@/components/public/opening-hours-modal";
 import styles from "./contact.module.css";
 
 export const metadata: Metadata = { title: "Contact", description: "Find your way to Kōhi Coffee." };
@@ -19,7 +20,7 @@ function whatsappHref(phone: string) {
 function displayHours(hours: Record<string, string>) {
   const values = Object.values(hours).filter(Boolean);
   if (values.length > 0 && new Set(values).size === 1) return `Daily ${values[0]}`;
-  return "See our weekly hours below";
+  return "See our weekly hours";
 }
 
 export default async function ContactPage() {
@@ -29,7 +30,7 @@ export default async function ContactPage() {
     <div className={styles.page}>
       <div className={styles.shell}>
         <header className={styles.intro} data-enter>
-          <p className={styles.kicker}>Come say hello <span>/</span> Kemang, Jakarta</p>
+          <p className={styles.kicker}>Come say hello</p>
           <h1>Find your way in.</h1>
         </header>
         <section className={styles.details}>
@@ -40,7 +41,7 @@ export default async function ContactPage() {
           </div>
           <address className={styles.info} data-stagger>
             <a className={styles.directions} href={settings.mapsUrl} rel="noreferrer" target="_blank"><p>Visit</p><strong>{settings.address}</strong></a>
-            <div><p>Open</p><strong>{displayHours(settings.openingHours)}</strong></div>
+            <div><p>Open</p><strong><OpeningHoursModal hours={settings.openingHours} triggerLabel={displayHours(settings.openingHours)} /></strong></div>
             <div><p>Contact</p><a href={phoneHref(settings.phone)}>{settings.phone}</a><a href={`mailto:${settings.email}`}>{settings.email}</a></div>
             <a className={styles.whatsapp} href={whatsappHref(settings.whatsapp)} rel="noreferrer" target="_blank">Chat on WhatsApp ↗</a>
 

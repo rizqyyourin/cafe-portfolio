@@ -23,16 +23,16 @@ function settingsValues(formData: FormData) {
     cafeName: stringValue(formData, "cafeName"),
     tagline: stringValue(formData, "tagline"),
     description: stringValue(formData, "description"),
-    logoUrl: stringValue(formData, "logoUrl"),
     address: stringValue(formData, "address"),
     phone: stringValue(formData, "phone"),
     whatsapp: stringValue(formData, "whatsapp"),
     email: stringValue(formData, "email"),
     instagram: stringValue(formData, "instagram"),
+    threads: stringValue(formData, "threads"),
+    twitter: stringValue(formData, "twitter"),
     tiktok: stringValue(formData, "tiktok"),
     facebook: stringValue(formData, "facebook"),
     mapsUrl: stringValue(formData, "mapsUrl"),
-    mapsEmbedUrl: stringValue(formData, "mapsEmbedUrl"),
     openingHours: Object.fromEntries(weekdayNames.map((day) => [day, stringValue(formData, `openingHours.${day}`)])),
   };
 }

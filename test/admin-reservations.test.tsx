@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -6,7 +6,7 @@ const navigationMocks = vi.hoisted(() => ({ refresh: vi.fn() }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => navigationMocks }));
 
-import { ReservationsView, type AdminReservation, type ReservationAction, type ReservationPageData } from "@/components/admin/reservations-view";
+import { ReservationsView, type AdminReservation, type ReservationAction, type ReservationListAction, type ReservationPageData } from "@/components/admin/reservations-view";
 
 const reservations: AdminReservation[] = [
   {
@@ -72,11 +72,13 @@ const data: ReservationPageData = {
   weekEnd: "2099-08-16",
   pendingCount: 2,
   reservations,
+  hasMore: false,
+  nextOffset: null,
 };
 
-function renderReservations(action?: ReservationAction) {
+function renderReservations(action?: ReservationAction, loadAction?: ReservationListAction, pageData: ReservationPageData = data) {
   const updateReservationStatusAction = action ?? vi.fn().mockResolvedValue({ success: true, message: "Reservation confirmed." });
-  return { updateReservationStatusAction, ...render(<ReservationsView data={data} updateReservationStatusAction={updateReservationStatusAction} />) };
+  return { updateReservationStatusAction, ...render(<ReservationsView data={pageData} loadReservationsPageAction={loadAction} updateReservationStatusAction={updateReservationStatusAction} />) };
 }
 
 describe("reservations module", () => {
@@ -94,7 +96,8 @@ describe("reservations module", () => {
     expect(screen.getByRole("button", { name: "Confirm reservation" })).toBeInTheDocument();
 
     const requestRegion = screen.getByRole("region", { name: "Reservation requests" });
-    expect(requestRegion).toHaveClass("overflow-x-auto");
+    expect(requestRegion).toHaveClass("overflow-auto");
+    expect(requestRegion).toHaveClass("max-h-[42rem]");
     expect(within(requestRegion).getByText("Customer").parentElement).toHaveClass("min-w-[44rem]");
   });
 
@@ -114,6 +117,33 @@ describe("reservations module", () => {
     expect(screen.getByText("No table requests match these filters.")).toBeInTheDocument();
     await user.click(within(screen.getByRole("region", { name: "Reservation filters" })).getByRole("button", { name: "Clear filters" }));
     expect(screen.getByRole("button", { name: "Open request from Nadia Ramadhani" })).toBeInTheDocument();
+  });
+
+  it("searches visible reservations and reloads the paginated list with the query", async () => {
+    const user = userEvent.setup();
+    const loadAction = vi.fn().mockResolvedValue({ reservations: [reservations[2]], hasMore: false, nextOffset: null });
+    renderReservations(undefined, loadAction, { ...data, hasMore: true, nextOffset: 5 });
+
+    await user.type(screen.getByRole("searchbox", { name: "Search reservations" }), "clara");
+
+    await waitFor(() => expect(loadAction).toHaveBeenCalledWith({ offset: 0, status: "all", dateFilter: "all", year: "2099", query: "clara" }));
+    expect(screen.getByRole("button", { name: "Open request from Clara Wibowo" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open request from Nadia Ramadhani" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the focused search field inside a single bordered control", () => {
+    renderReservations();
+
+    const searchbox = screen.getByRole("searchbox", { name: "Search reservations" });
+    expect(searchbox).toHaveClass("rounded-none");
+    expect(searchbox).toHaveClass("border-0");
+    expect(searchbox).toHaveClass("appearance-none");
+    expect(searchbox).toHaveClass("focus:outline-none");
+    expect(searchbox).toHaveClass("focus:ring-0");
+    expect(searchbox).toHaveClass("reservation-search-input");
+    expect(searchbox.parentElement).toHaveClass("reservation-search");
+    expect(searchbox.parentElement).toHaveClass("focus-within:border-[#8b4a2b]");
+    expect(searchbox.parentElement).not.toHaveClass("focus-within:ring-2");
   });
 
   it("filters the current week, month and selected year, combined with status", async () => {
@@ -141,18 +171,88 @@ describe("reservations module", () => {
     renderReservations();
 
     await user.click(screen.getByRole("button", { name: "Open request from Arga Pradana" }));
-    const confirmedDetail = screen.getByRole("region", { name: "Selected request" });
+    const confirmedDetail = screen.getByRole("complementary", { name: "Selected request" });
     expect(within(confirmedDetail).getByRole("heading", { name: "Arga Pradana" })).toBeInTheDocument();
-    expect(within(confirmedDetail).getByText("CONFIRMED", { selector: "span" })).toBeInTheDocument();
+    expect(within(confirmedDetail).getByText("Confirmed", { selector: "span" })).toBeInTheDocument();
     expect(within(confirmedDetail).getByRole("button", { name: "Edit reservation" })).toBeInTheDocument();
     expect(within(confirmedDetail).getByRole("link", { name: "Message guest" })).toHaveAttribute("href", "https://wa.me/6281234567890");
     expect(screen.queryByRole("button", { name: "Confirm reservation" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Open request from Fira Aulia" }));
-    const cancelledDetail = screen.getByRole("region", { name: "Selected request" });
-    expect(within(cancelledDetail).getByText("CANCELLED", { selector: "span" })).toBeInTheDocument();
+    const cancelledDetail = screen.getByRole("complementary", { name: "Selected request" });
+    expect(within(cancelledDetail).getByText("Cancelled", { selector: "span" })).toBeInTheDocument();
     expect(within(cancelledDetail).getByRole("button", { name: "Restore reservation" })).toBeInTheDocument();
     expect(within(cancelledDetail).getByRole("link", { name: "View message" })).toHaveAttribute("href", "https://wa.me/6281555556666");
+  });
+
+  it("opens the confirmed edit flow with completed and cancelled outcomes", async () => {
+    const user = userEvent.setup();
+    const action = vi.fn().mockResolvedValue({ success: true, message: "Reservation updated." });
+    renderReservations(action);
+
+    await user.click(screen.getByRole("button", { name: "Open request from Arga Pradana" }));
+    await user.click(screen.getByRole("button", { name: "Edit reservation" }));
+    expect(screen.getByRole("dialog", { name: "Edit reservation" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Mark reservation completed" })).toBeInTheDocument();
+    const cancelReservation = screen.getByRole("button", { name: "Cancel reservation" });
+    expect(cancelReservation).toBeInTheDocument();
+    expect(cancelReservation).toHaveClass("hover:text-[#954b48]");
+
+    await user.click(screen.getByRole("button", { name: "Cancel reservation" }));
+    expect(action).toHaveBeenCalledWith(expect.any(FormData));
+    expect(action.mock.calls[0]?.[0].get("reservationId")).toBe("reservation-2");
+    expect(action.mock.calls[0]?.[0].get("status")).toBe("CANCELLED");
+  });
+
+  it("completes a confirmed reservation from the edit flow", async () => {
+    const user = userEvent.setup();
+    const action = vi.fn().mockResolvedValue({ success: true, message: "Reservation marked completed." });
+    renderReservations(action);
+
+    await user.click(screen.getByRole("button", { name: "Open request from Arga Pradana" }));
+    await user.click(screen.getByRole("button", { name: "Edit reservation" }));
+    await user.click(screen.getByRole("button", { name: "Mark reservation completed" }));
+
+    expect(action).toHaveBeenCalledOnce();
+    expect(action.mock.calls[0]?.[0].get("reservationId")).toBe("reservation-2");
+    expect(action.mock.calls[0]?.[0].get("status")).toBe("COMPLETED");
+  });
+
+  it("restores a cancelled reservation to pending from its detail action", async () => {
+    const user = userEvent.setup();
+    const action = vi.fn().mockResolvedValue({ success: true, message: "Reservation restored." });
+    renderReservations(action);
+
+    await user.click(screen.getByRole("button", { name: "Open request from Fira Aulia" }));
+    await user.click(screen.getByRole("button", { name: "Restore reservation" }));
+
+    expect(action).toHaveBeenCalledOnce();
+    expect(action.mock.calls[0]?.[0].get("reservationId")).toBe("reservation-5");
+    expect(action.mock.calls[0]?.[0].get("status")).toBe("PENDING");
+  });
+
+  it("loads the next reservation page when the infinite-scroll sentinel intersects", async () => {
+    let triggerIntersection: ((isIntersecting: boolean) => void) | undefined;
+    class MockIntersectionObserver {
+      constructor(callback: IntersectionObserverCallback) {
+        triggerIntersection = (isIntersecting) => callback([{ isIntersecting } as IntersectionObserverEntry], this as unknown as IntersectionObserver);
+      }
+
+      observe = vi.fn();
+      disconnect = vi.fn();
+    }
+    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+
+    const nextReservation = { ...reservations[0], id: "reservation-next", name: "Next Page Guest" };
+    const loadAction = vi.fn().mockResolvedValue({ reservations: [nextReservation], hasMore: false, nextOffset: null });
+    renderReservations(undefined, loadAction, { ...data, hasMore: true, nextOffset: 5 });
+    await waitFor(() => expect(triggerIntersection).toBeDefined());
+
+    triggerIntersection?.(true);
+
+    await waitFor(() => expect(loadAction).toHaveBeenCalledWith({ offset: 5, status: "all", dateFilter: "all", year: "2099", query: "" }));
+    expect(screen.getByRole("button", { name: "Open request from Next Page Guest" })).toBeInTheDocument();
+    expect(screen.getByText("No more reservations.")).toBeInTheDocument();
   });
 
   it("updates a pending request once, refreshes, and shows the success state", async () => {

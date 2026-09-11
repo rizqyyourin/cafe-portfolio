@@ -26,11 +26,13 @@ Reservations, gallery images, testimonials, and cafe settings are independent in
 
 ```text
 PENDING ──→ CONFIRMED ──→ COMPLETED
-   └─────→ CANCELLED
+   └─────→ CANCELLED ──→ PENDING
+                 ↑
+                 └──── CONFIRMED (from Edit reservation)
 ```
 
 The reservation management action must reject any other transition. Record who made the change if multi-admin audit logging is added after MVP.
 
 ## Seed content
 
-`pnpm db:seed` contains six categories, twenty menu items, ten Unsplash gallery records, four testimonials, five reservations, and one cafe settings row. The default menu covers every category with published items and can be rerun without overwriting existing CMS content; it only fills missing default image URLs. Unsplash is development/demo media only; replace these URLs with licensed, client-owned media before deployment.
+`pnpm db:seed` contains six categories, twenty menu items, ten Unsplash gallery records, four testimonials, twenty reservations, and one cafe settings row. The default menu covers every category with published items and can be rerun without overwriting existing CMS content; it only fills missing default image URLs. Unsplash is development/demo media only; replace these URLs with licensed, client-owned media before deployment.

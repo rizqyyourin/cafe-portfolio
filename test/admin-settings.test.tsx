@@ -9,16 +9,16 @@ const settings: CafeSettings = {
   cafeName: "Kōhi Coffee",
   tagline: "Coffee worth slowing down for.",
   description: "A modern neighbourhood specialty coffee shop in Kemang, Jakarta.",
-  logoUrl: null,
   address: "Jl. Kemang Raya No. 28, Jakarta Selatan 12730",
   phone: "+62 21 5550 0188",
   whatsapp: "628111111111",
   email: "hello@kohicoffee.example",
   instagram: "https://instagram.com/kohicoffee",
+  threads: null,
+  twitter: null,
   tiktok: null,
   facebook: null,
   mapsUrl: "https://maps.google.com/?q=Kemang+Jakarta",
-  mapsEmbedUrl: null,
   openingHours: {
     Monday: "08:00 - 22:00",
     Tuesday: "08:00 - 22:00",
@@ -55,6 +55,9 @@ describe("settings module", () => {
     await user.click(screen.getByRole("tab", { name: "General" }));
     expect(screen.getByLabelText("Cafe name")).toHaveValue("Kōhi House");
 
+    await user.click(screen.getByRole("tab", { name: "Social links" }));
+    await user.type(screen.getByLabelText("Threads"), "https://threads.net/@kohi");
+    await user.type(screen.getByLabelText("Twitter"), "https://x.com/kohi");
     await user.click(screen.getByRole("tab", { name: "Opening hours" }));
     await user.clear(screen.getByLabelText("Monday hours"));
     await user.type(screen.getByLabelText("Monday hours"), "09:00 - 21:00");
@@ -64,6 +67,8 @@ describe("settings module", () => {
     const form = saveSettingsAction.mock.calls[0]?.[0] as FormData;
     expect(form.get("cafeName")).toBe("Kōhi House");
     expect(form.get("address")).toBe("New address, Jakarta");
+    expect(form.get("threads")).toBe("https://threads.net/@kohi");
+    expect(form.get("twitter")).toBe("https://x.com/kohi");
     expect(form.get("openingHours.Monday")).toBe("09:00 - 21:00");
     expect(await screen.findByRole("status")).toHaveTextContent("Settings saved.");
   });

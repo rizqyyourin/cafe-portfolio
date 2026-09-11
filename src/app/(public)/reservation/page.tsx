@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { ReservationForm } from "@/components/reservation-form";
+import { OpeningHoursModal } from "@/components/public/opening-hours-modal";
 import { getPublicCafeSettings } from "@/db/settings";
 import { getReservationDefaults } from "@/lib/reservation-defaults";
 import styles from "./reservation.module.css";
@@ -40,7 +41,7 @@ export default async function ReservationPage() {
             <p>Your request is not confirmed until you hear from us.<br />We&apos;ll get back to you as soon as we can.</p>
             <p className={styles.hours}>
               <span>Open daily</span>
-              <span>{hoursText}</span>
+              <span><OpeningHoursModal hours={settings.openingHours} triggerLabel={hoursText} /></span>
             </p>
           </aside>
         </section>

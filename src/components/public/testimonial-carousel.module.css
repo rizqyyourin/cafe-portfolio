@@ -1,0 +1,19 @@
+.carousel { margin-top: 1.7rem; }
+.slides { display: grid; }
+.slide { grid-area: 1 / 1; min-height: clamp(13rem, 22vw, 20rem); visibility: hidden; opacity: 0; transform: translateY(0.75rem); transition: visibility 500ms, opacity 500ms ease, transform 560ms cubic-bezier(0.22, 1, 0.36, 1); }
+.slideActive { visibility: visible; opacity: 1; transform: none; }
+.stars { display: flex; justify-content: center; gap: 0.35rem; color: #c8ad68; font-size: 1rem; line-height: 1; }
+.starEmpty { color: #625b53; }
+.quote { max-width: 57rem; margin: 1.35rem auto 0; font-family: var(--font-serif), Georgia, serif; font-size: clamp(2rem, 3.4vw, 4.15rem); font-weight: 500; letter-spacing: -0.05em; line-height: 0.98; }
+.author { margin-top: 1.7rem; color: #b3a47b; font-family: var(--font-mono), monospace; font-size: 0.61rem; letter-spacing: 0.14em; text-transform: uppercase; }
+.controls { display: flex; justify-content: center; gap: 0.55rem; margin-top: 1.3rem; }
+.dot { display: grid; width: 2.2rem; height: 2.2rem; place-items: center; border-radius: 999px; }
+.dot::before { width: 0.36rem; height: 0.36rem; border-radius: inherit; background: #706961; content: ""; transition: width 220ms ease, background-color 220ms ease; }
+.dotActive::before { width: 1.35rem; background: #c8ad68; }
+@media (max-width: 780px) {
+  .slide { min-height: 12rem; }
+  .stars, .controls { justify-content: flex-start; }
+  .quote { margin-top: 1.1rem; font-size: clamp(1.75rem, 7.8vw, 2.6rem); line-height: 0.94; }
+  .author { margin-top: 1.4rem; }
+}
+@media (prefers-reduced-motion: reduce) { .slide, .dot::before { transition: none; } }
