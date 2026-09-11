@@ -1,0 +1,50 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+
+import { createMenuItem as createMenuItemAction } from "@/actions/admin-menu";
+import { updateReservationStatus } from "@/db/reservations";
+import { requireAdminSession } from "@/lib/auth-guard";
+
+export type AdminDashboardActionState = {
+  success: boolean;
+  message?: string;
+  errors?: Record<string, string[]>;
+};
+
+function stringValue(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return typeof value === "string" ? value : "";
+}
+
+/** Keep the dashboard entrypoint stable while delegating to the menu action. */
+export async function createMenuItem(formData: FormData) {
+  return createMenuItemAction(formData);
+}
+
+const dashboardReservationStatusSchema = z.object({
+  reservationId: z.string().trim().min(1, "Reservation is required."),
+  status: z.enum(["CONFIRMED", "CANCELLED"]),
+});
+
+export async function updateAdminReservationStatus(formData: FormData): Promise<AdminDashboardActionState> {
+  await requireAdminSession();
+  const parsed = dashboardReservationStatusSchema.safeParse({
+    reservationId: stringValue(formData, "reservationId"),
+    status: stringValue(formData, "status"),
+  });
+
+  if (!parsed.success) return { success: false, errors: parsed.error.flatten().fieldErrors };
+
+  try {
+    await updateReservationStatus(parsed.data.reservationId, parsed.data.status);
+  } catch (error) {
+    console.error("Reservation status update failed", error instanceof Error ? error.message : error);
+    return { success: false, message: "We could not update that reservation right now. Please refresh and try again." };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/reservations");
+  return { success: true, message: `Reservation ${parsed.data.status === "CONFIRMED" ? "confirmed" : "cancelled"}.` };
+}

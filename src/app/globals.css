@@ -1,0 +1,94 @@
+@import "tailwindcss";
+@import "@daypicker/react/style.css";
+
+:root {
+  --background: #f7f2e9;
+  --foreground: #1e1b18;
+  --card: #fffdf9;
+  --muted: #e9e0d3;
+  --muted-foreground: #70685e;
+  --border: #ded2c2;
+  --accent: #c96c3b;
+  --accent-foreground: #fffaf3;
+  --ring: #8b4a2b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
+}
+
+* { border-color: var(--border); }
+
+.reservation-filter {
+  appearance: none;
+  min-height: 3.5rem;
+  padding: 0.75rem 2.75rem 0.75rem 1.25rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2370685e' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+}
+
+.menu-publishing-checkbox,
+.gallery-publishing-checkbox {
+  appearance: auto;
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  margin: 0;
+  accent-color: #557154;
+  cursor: pointer;
+}
+
+.menu-publishing-option:has(input:checked),
+.gallery-publishing-option:has(input:checked) {
+  border-color: #557154;
+  background: #eef5ea;
+}
+
+.menu-publishing-option:has(input:focus-visible),
+.gallery-publishing-option:has(input:focus-visible) {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+}
+
+button, [role="button"] { border-radius: 4px; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+::selection { background: #e8b493; color: #1e1b18; }
+
+.shell { width: min(100% - 11.25rem, 103rem); margin-inline: auto; }
+
+.eyebrow {
+  color: #8b4a2b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.display { font-family: var(--font-serif), Georgia, "Times New Roman", serif; letter-spacing: -0.045em; }
+
+[role="tabpanel"][id^="settings-panel-"] { min-height: 53rem; }
+
+:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+
+@media (max-width: 760px) { .shell { width: min(100% - 2.5rem, 35rem); } }

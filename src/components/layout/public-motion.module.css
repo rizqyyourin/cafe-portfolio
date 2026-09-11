@@ -1,0 +1,78 @@
+.root {
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.navLink { position: relative; }
+.navLink::after {
+  position: absolute;
+  inset: auto 0 -0.45rem;
+  height: 1px;
+  background: currentColor;
+  content: "";
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 250ms var(--motion-ease);
+}
+.navLink:hover::after, .navLink:focus-visible::after, .navLink[aria-current="page"]::after { transform: scaleX(1); }
+
+.menuToggle { position: relative; }
+.menuToggle svg { display: block; }
+
+.mobileNav {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  opacity: 0;
+  transition: grid-template-rows 350ms var(--motion-ease), opacity 200ms ease, visibility 350ms;
+}
+.mobileNav[data-open="true"] { grid-template-rows: 1fr; visibility: visible; opacity: 1; }
+.mobileNavInner { min-height: 0; overflow: hidden; }
+.mobileNavLink { transform: translateY(-6px); opacity: 0; transition: transform 300ms var(--motion-ease), opacity 250ms ease; }
+.mobileNav[data-open="true"] .mobileNavLink { transform: none; opacity: 1; transition-delay: 70ms; }
+.mobileNav[data-open="true"] .mobileNavLink:nth-child(2) { transition-delay: 100ms; }
+.mobileNav[data-open="true"] .mobileNavLink:nth-child(3) { transition-delay: 130ms; }
+.mobileNav[data-open="true"] .mobileNavLink:nth-child(4) { transition-delay: 160ms; }
+.mobileNav[data-open="true"] .mobileNavLink:nth-child(5) { transition-delay: 190ms; }
+@media (min-width: 1024px) { .mobileNav { display: none; } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .root [data-enter] > * { animation: enter 750ms var(--motion-ease) both; }
+  .root [data-enter] > :nth-child(2) { animation-delay: 70ms; }
+  .root [data-enter] > :nth-child(3) { animation-delay: 140ms; }
+  .root [data-enter] > :nth-child(4) { animation-delay: 210ms; }
+  .root [data-enter] > :nth-child(5) { animation-delay: 280ms; }
+  .root [data-enter="soft"] > * { animation-duration: 420ms; }
+  .root [data-enter] > [data-motion-state="pending"] { animation: none; }
+  .root [data-hero-image] img { animation: settle 1400ms var(--motion-ease) both; }
+
+  .root [data-motion-state] {
+    transition: opacity 750ms var(--motion-ease), transform 850ms var(--motion-ease);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .root [data-motion-state="pending"] { opacity: 0; transform: translateY(24px); }
+  .root [data-motion-state="pending"][data-reveal="image"] { transform: translateY(20px) scale(0.985); }
+  .root [data-motion-state="visible"] { opacity: 1; transform: none; }
+  .root [data-motion-state]:focus-within { opacity: 1; transform: none; transition-delay: 0ms; }
+
+  .root a > span[aria-hidden="true"] { transition: transform 250ms var(--motion-ease); }
+  .root a:hover > span[aria-hidden="true"], .root a:focus-visible > span[aria-hidden="true"] { transform: translateX(3px); }
+  .root :is(input, textarea) { transition: border-color 200ms ease, box-shadow 200ms ease, background-color 200ms ease; }
+  .root :is(input, textarea):focus-visible { box-shadow: 0 0 0 4px #9c875b18; }
+  .root [role="status"] { animation: enter 400ms var(--motion-ease) both; }
+
+  @media (max-width: 760px) {
+    .root [data-motion-state] { transition-duration: 550ms; transition-delay: min(var(--reveal-delay, 0ms), 70ms); }
+    .root [data-motion-state="pending"] { transform: translateY(14px); }
+    .root [data-enter] > * { animation-duration: 600ms; }
+  }
+}
+
+@keyframes enter { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes settle { from { transform: scale(1.045); } to { transform: scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  :global(html):has(.root) { scroll-behavior: auto; }
+  .root *, .root *::before, .root *::after { animation: none !important; transition: none !important; }
+  .root [data-motion-state] { opacity: 1; transform: none; }
+  .root a:hover, .root img { transform: none !important; }
+}

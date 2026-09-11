@@ -1,0 +1,38 @@
+.page { padding-block: 4rem clamp(5rem, 9vw, 9rem); }
+.shell { width: min(100% - 9rem, 81rem); margin-inline: auto; }
+.kicker, .category { color: #9c875b; font-family: var(--font-mono), monospace; font-size: 0.69rem; font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; }
+.kicker span { margin-inline: 0.75rem; }
+.page h1, .itemLine h2, .availability p { font-family: var(--font-serif), Georgia, serif; font-weight: 500; letter-spacing: -0.055em; }
+.page h1 { margin-top: 2rem; color: #2d2825; font-size: 4.125rem; line-height: 1; }
+.intro { max-width: 30rem; margin-top: 1rem; color: #716a62; font-size: 1.06rem; line-height: 1.53; }
+.filters { display: flex; gap: 0.75rem; margin-top: 5rem; padding-block: 1rem; overflow-x: auto; border-block: 1px solid #ded7ca; }
+.filters button { flex: none; min-height: 2.75rem; padding-inline: 1rem; color: #6c645b; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; transition: background-color 160ms ease, color 160ms ease; }
+.filters button:hover, .filters .activeFilter { background: #2d2926; color: #f8f3e8; }
+.menuGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4.7rem 1.25rem; padding-top: 6.25rem; }
+.menuImage { position: relative; aspect-ratio: 1.43; overflow: hidden; background: #dfd4c3; }
+.menuImage img { object-fit: cover; transition: transform 400ms ease; }
+.menuCard:hover .menuImage img { transform: scale(1.035); }
+.itemMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin-top: 0.8rem; }
+.category { font-size: 0.54rem; }
+.soldOutBadge { display: inline-flex; padding: 0.3rem 0.6rem; border: 1px solid #e1c98b; border-radius: 999px; background: #f5e7bd; color: #705820; font-size: 0.65rem; font-weight: 600; line-height: 1; }
+.itemLine { display: flex; align-items: baseline; justify-content: space-between; gap: 0.8rem; margin-top: 0.55rem; }
+.itemLine h2 { color: #352e29; font-size: 1.45rem; line-height: 1; }
+.itemLine span { flex: none; color: #625a52; font-size: 0.63rem; font-weight: 700; letter-spacing: 0.09em; }
+.description { margin-top: 0.55rem; color: #7d746a; font-size: 0.78rem; line-height: 1.5; }
+.emptyState { grid-column: 1 / -1; color: #776f65; }
+.availability { display: flex; align-items: center; justify-content: space-between; gap: 2rem; margin-top: clamp(5rem, 9vw, 10rem); padding: clamp(1.5rem, 3vw, 2.6rem); background: #e8dfcd; }
+.availability p { color: #403831; font-size: clamp(1.7rem, 2.5vw, 3rem); line-height: 1; }
+.availability a { flex: none; color: #9b8658; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.availability a span { margin-left: 0.75rem; }
+@media (max-width: 760px) {
+  .page { padding-block: 3.5rem 4rem; }
+  .shell { width: min(100% - 2.5rem, 35rem); }
+  .page h1 { margin-top: 1.3rem; font-size: clamp(3.7rem, 17vw, 5rem); }
+  .intro { margin-top: 1rem; font-size: 1rem; }
+  .filters { margin-top: 3rem; }
+  .menuGrid { grid-template-columns: 1fr; gap: 3.5rem; padding-top: 2.6rem; }
+  .itemLine h2 { font-size: 2.15rem; }
+  .availability { display: block; margin-top: 4.5rem; }
+  .availability p { font-size: 2rem; }
+  .availability a { display: inline-block; margin-top: 1.6rem; }
+}

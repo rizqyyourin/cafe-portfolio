@@ -1,0 +1,5 @@
+import type { ReactNode } from "react";
+
+export function AdminPageHeader({ title, description, action }: { title: string; description: string; action?: ReactNode }) {
+  return <div className="flex flex-wrap items-end justify-between gap-4"><div><h1 className="display text-4xl font-semibold">{title}</h1><p className="mt-2 text-sm text-muted-foreground">{description}</p></div>{action}</div>;
+}

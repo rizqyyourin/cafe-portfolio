@@ -1,0 +1,182 @@
+.page {
+  padding: clamp(5.25rem, 7vw, 6.5rem) 0 16rem;
+}
+
+.shell {
+  display: grid;
+  width: min(100% - 11.25rem, 103rem);
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 2fr);
+  gap: clamp(3.5rem, 7.5vw, 8.5rem);
+  margin-inline: auto;
+  align-items: start;
+}
+
+.intro {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-top: 0.7rem;
+}
+
+.kicker,
+.hours {
+  color: #9c875b;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.divider {
+  margin-inline: 1.1rem;
+}
+
+.title {
+  margin-top: clamp(3rem, 4vw, 3.6rem);
+  color: #2e2926;
+  font-family: var(--font-serif), Georgia, "Times New Roman", serif;
+  font-size: clamp(4.25rem, 4.65vw, 5.3rem);
+  font-weight: 500;
+  letter-spacing: -0.075em;
+  line-height: 1.12;
+}
+
+.description {
+  max-width: 31rem;
+  margin-top: 2.2rem;
+  color: #6e6861;
+  font-size: clamp(1rem, 1.25vw, 1.2rem);
+  line-height: 1.5;
+}
+
+.note {
+  display: flex;
+  min-height: 29.75rem;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 4.4rem;
+  border-radius: 4px;
+  background: #2e2a27;
+  padding: 2.8rem 2.2rem;
+  color: #f8f3e9;
+}
+
+.note h2 {
+  max-width: 15ch;
+  color: #f8f3e9;
+  font-family: var(--font-serif), Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 2.3vw, 2.45rem);
+  font-weight: 500;
+  letter-spacing: -0.055em;
+  line-height: 1.06;
+}
+
+.note > p:not(.hours) {
+  max-width: 27rem;
+  margin-top: 1.7rem;
+  color: #d3cbc0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.hours {
+  display: grid;
+  gap: 0.3rem;
+  margin-top: 1.7rem;
+}
+
+.hours span:last-child {
+  color: #b8a77b;
+}
+
+.formCard {
+  min-width: 0;
+  min-height: 57rem;
+  border: 1px solid #ded9d0;
+  border-radius: 6px;
+  background: #fff;
+  padding: clamp(2rem, 2.7vw, 2.8rem);
+  box-shadow: 0 1px 2px rgb(53 45 38 / 3%);
+}
+
+@media (max-width: 1000px) {
+  .shell {
+    gap: 3.5rem;
+  }
+
+  .title {
+    font-size: clamp(4rem, 6vw, 5rem);
+  }
+
+  .note {
+    padding-inline: 1.7rem;
+  }
+}
+
+@media (max-width: 960px) {
+  .shell {
+    display: block;
+  }
+
+  .formCard {
+    margin-top: 4rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding: 3.7rem 0 6rem;
+  }
+
+  .shell {
+    display: block;
+    width: min(100% - 2.5rem, 35rem);
+  }
+
+  .intro {
+    padding-top: 0;
+  }
+
+  .kicker {
+    font-size: 0.6rem;
+  }
+
+  .divider {
+    margin-inline: 0.7rem;
+  }
+
+  .title {
+    margin-top: 2.8rem;
+    font-size: clamp(3.55rem, 15vw, 5rem);
+    line-height: 1.03;
+  }
+
+  .description {
+    margin-top: 1.6rem;
+    font-size: 0.95rem;
+  }
+
+  .note {
+    min-height: 23rem;
+    margin-top: 3rem;
+    padding: 2rem 1.6rem;
+  }
+
+  .note h2 {
+    font-size: 2rem;
+  }
+
+  .note > p:not(.hours) {
+    margin-top: 1.4rem;
+    font-size: 0.9rem;
+  }
+
+  .formCard {
+    min-height: auto;
+    margin-top: 2rem;
+    padding: 1.5rem 1.15rem 1.75rem;
+  }
+}

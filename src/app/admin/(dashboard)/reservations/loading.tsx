@@ -1,0 +1,3 @@
+export default function AdminReservationsLoading() {
+  return <div aria-label="Loading reservations" className="animate-pulse space-y-9" role="status"><div className="h-28 max-w-2xl rounded-md bg-[#e9e0d3]" /><div className="flex gap-3"><div className="h-14 w-36 rounded-md bg-[#e9e0d3]" /><div className="h-14 w-24 rounded-md bg-[#e9e0d3]" /><div className="h-14 w-28 rounded-md bg-[#e9e0d3]" /></div><div className="h-6 w-40 rounded bg-[#e9e0d3]" /><div className="grid gap-8 xl:grid-cols-[1.45fr_0.75fr]"><div className="h-[38rem] rounded-md bg-[#e9e0d3]" /><div className="h-[38rem] rounded-md bg-[#e9e0d3]" /></div></div>;
+}
