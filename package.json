@@ -2,7 +2,7 @@
   "name": "kohicoffee-cms",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@11.4.0",
+  "packageManager": "bun@1.4.2",
   "engines": {
     "node": ">=20.9.0"
   },
